@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="LaunchTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">#F3005A</item>
+        <item name="colorPrimaryDark">#BF0048</item>
+        <item name="colorAccent">#F3005A</item>
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+
+    <style name="NormalTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">#F3005A</item>
+        <item name="colorPrimaryDark">#BF0048</item>
+        <item name="colorAccent">#F3005A</item>
+    </style>
+</resources>
+
