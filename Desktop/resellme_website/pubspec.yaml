@@ -47,6 +47,7 @@ dependencies:
   paytm_allinonesdk: ^1.1.7
   provider: ^6.1.2
   fluttertoast: ^8.2.2
+  intl: ^0.18.0
 
 
 dev_dependencies:

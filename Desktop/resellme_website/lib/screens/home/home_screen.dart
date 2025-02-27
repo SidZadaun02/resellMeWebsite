@@ -4,9 +4,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 import '../../models/home.dart'; // Assuming this contains your ResponseModel and related classes
 import '../../network/api_service.dart';
+import '../comment/comment_and_review_sheet.dart';
 import '../product/views/product_responsive.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -121,7 +124,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        title:   Text(
+         'ResellMe', // Display the group name
+          style: GoogleFonts.poppins(
+            fontSize: 28,
+            color: Colors.pink,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       body: isLoading && responses == null
           ? const Center(child: CircularProgressIndicator())
@@ -207,7 +217,7 @@ class _BannerSectionWidgetState extends State<BannerSectionWidget> {
       children: [
         if (banners.isNotEmpty)
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.6, // Adjusted height
+            height: MediaQuery.of(context).size.width * 0.3, // Adjusted height
             child: Center(
               child: SizedBox(
                 width: MediaQuery.of(context).size.width, // Full screen width
@@ -224,11 +234,14 @@ class _BannerSectionWidgetState extends State<BannerSectionWidget> {
                   itemBuilder: (context, index) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: CachedNetworkImage(
-                        imageUrl: banners[index].imageUrl ?? '',
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                        errorWidget: (context, url, error) => const Icon(Icons.error),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16.0), // 16dp corner radius
+                        child: CachedNetworkImage(
+                          imageUrl: banners[index].imageUrl ?? '',
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                          errorWidget: (context, url, error) => const Icon(Icons.error),
+                        ),
                       ),
                     );
                   },
@@ -256,7 +269,6 @@ class _BannerSectionWidgetState extends State<BannerSectionWidget> {
   }
 }
 
-// Single Catalog Section Widget
 class SingleCatalogSectionWidget extends StatelessWidget {
   final SingleCatalogSection section;
 
@@ -268,212 +280,217 @@ class SingleCatalogSectionWidget extends StatelessWidget {
     final catalog = catalogData.catalog;
     final products = catalog.products;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundImage: CachedNetworkImageProvider(
-                  catalogData.dpUrl ?? '',
+    return Card(
+      elevation: 1, // Add elevation for shadow
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16), // Rounded corners
+      ),
+      margin: const EdgeInsets.all(16), // Add margin around the card
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundImage: CachedNetworkImageProvider(
+                    catalogData.dpUrl ?? '',
+                  ),
+                  onBackgroundImageError: (exception, stackTrace) => const Icon(Icons.error),
+                  child: catalogData.dpUrl == null || catalogData.dpUrl!.isEmpty
+                      ? Text(
+                    catalogData.groupName?.substring(0, 1) ?? 'T',
+                    style: const TextStyle(color: Colors.black),
+                  )
+                      : null,
                 ),
-                onBackgroundImageError: (exception, stackTrace) => const Icon(Icons.error),
-                child: catalogData.dpUrl == null || catalogData.dpUrl!.isEmpty
-                    ? Text(
-                  catalogData.groupName?.substring(0, 1) ?? 'T',
-                  style: const TextStyle(color: Colors.black),
-                )
-                    : null,
-              ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    catalogData.groupName ?? 'Test Jewellery',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '15 Feb 2025',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            ],
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      catalogData.groupName ?? 'Test Jewellery',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      convertDate(catalog.promotedTime.toString()),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-        // Product Horizontal List
-        SizedBox(
-          height: 320,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              final product = products[index];
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: SizedBox(
-                  width: 200,
-                  child: InkWell(
-                    onTap: () {
-                      navigateToCatalog(context, catalog.catalogId);
-                    },
-                    borderRadius: BorderRadius.circular(10),
-                    child: Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          // Product Horizontal List
+          SizedBox(
+            height: 300,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: products.length,
+              itemBuilder: (context, index) {
+                final product = products[index];
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SizedBox(
+                    width: 200,
+                    child: InkWell(
+                      onTap: () {
+                        navigateToCatalog(context, catalog.catalogId);
+                      },
+                      borderRadius: BorderRadius.circular(10),
+                      child: Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                                  child: CachedNetworkImage(
+                                    imageUrl: product.imageUrl ?? '',
+                                    height: 200,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                                    errorWidget: (context, url, error) => const Icon(Icons.error),
+                                  ),
+                                ),
+                                if (product.videoUrl != null)
+                                  const Positioned(
+                                    top: 40,
+                                    left: 60,
+                                    child: Icon(Icons.play_circle_fill, color: Colors.white, size: 40),
+                                  ),
+                              ],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    unescapeJava(catalog.catalogDesc?.split('\n').first ?? 'Something testing'),
+                                    style: const TextStyle(fontSize: 14),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '₹${catalog.customerPrice?.toStringAsFixed(0) ?? '1049'}',
+                                    style: TextStyle(fontSize: 16, color: Colors.red[700], fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          // About the Brand
+          Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundImage: CachedNetworkImageProvider(
+                        catalogData.ownerDpUrl ?? '',
+                      ),
+                      onBackgroundImageError: (exception, stackTrace) => const Icon(Icons.error),
+                      child: catalogData.ownerDpUrl == null || catalogData.ownerDpUrl!.isEmpty
+                          ? Text(
+                        catalogData.groupName?.substring(0, 1) ?? 'T',
+                        style: const TextStyle(color: Colors.black),
+                      )
+                          : null,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-                                child: CachedNetworkImage(
-                                  imageUrl: product.imageUrl ?? '',
-                                  height: 200,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                                  errorWidget: (context, url, error) => const Icon(Icons.error),
-                                ),
-                              ),
-                              if (product.videoUrl != null)
-                                const Positioned(
-                                  top: 40,
-                                  left: 60,
-                                  child: Icon(Icons.play_circle_fill, color: Colors.white, size: 40),
-                                ),
-                            ],
+                          const Text(
+                            'About the brand',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
-                          Padding(
+                          Text(
+                            'Owner: ${catalogData.ownerName ?? ''}',
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          Text(
+                            'Deals in: ${catalogData.categoryName ?? ''}',
+                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          ),
+                          Text(
+                            'Location: ${catalogData.city ?? ''}',
+                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
                             padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 4),
-                                Text(
-                                  unescapeJava(catalog.catalogDesc?.split('\n').first ?? 'Something testing'),
-                                  style: const TextStyle(fontSize: 14),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '₹${catalog.customerPrice?.toStringAsFixed(0) ?? '1049'}',
-                                  style: TextStyle(fontSize: 16, color: Colors.red[700], fontWeight: FontWeight.bold),
-                                ),
-                              ],
+                            decoration: BoxDecoration(
+                              color: Colors.teal[100],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'Moto: ${catalogData.shortInfo ?? ''}',
+                              style: const TextStyle(fontSize: 12),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              );
-            },
-          ),
-        ),
-        // About the Brand
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundImage: CachedNetworkImageProvider(
-                      catalogData.ownerDpUrl ?? '',
-                    ),
-                    onBackgroundImageError: (exception, stackTrace) => const Icon(Icons.error),
-                    child: catalogData.ownerDpUrl == null || catalogData.ownerDpUrl!.isEmpty
-                        ? Text(
-                      catalogData.groupName?.substring(0, 1) ?? 'T',
-                      style: const TextStyle(color: Colors.black),
-                    )
-                        : null,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'About the brand',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          catalogData.groupName ?? 'TEST JEWELLARY',
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                        Text(
-                          catalogData.categoryName ?? 'Women Wears',
-                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                        ),
-                        Text(
-                          '${catalogData.city ?? 'Surat, Gujarat'}',
-                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.all(8.0),
-                          decoration: BoxDecoration(
-                            color: Colors.teal[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            catalogData.shortInfo ?? 'Himanshu (brand owner) "A comfortable..."',
-                            style: const TextStyle(fontSize: 12),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
               ),
             ),
           ),
-        ),
-        // Sell Online Button
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Sell Online on ResellMe clicked!')),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red[700],
-              minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text(
-              'Sell Online on ResellMe',
-              style: TextStyle(color: Colors.white, fontSize: 16),
+          // Comments & Reviews
+          const SizedBox(height: 16), // Add some spacing at the bottom
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: GestureDetector(
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return CommentsReviewsBottomSheet(
+                      token: 'YOUR_TOKEN', // Replace with the actual token
+                      groupId: catalog.catalogId,
+                      groupLogo: "widget.groupLogo",
+                      groupName: "widget.groupName",
+                      userId: 1,
+                    );
+                  },
+                );
+              },
+              child: Text(
+                'Comments & Reviews',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
-        ),
-        // Comments & Reviews (Placeholder)
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text(
-            'Comments & Reviews',
-            style: TextStyle(fontSize: 16, color: Colors.blue[700]),
-          ),
-        ),
-      ],
+          const SizedBox(height: 16), // Add some spacing at the bottom
+        ],
+      ),
     );
   }
 }
@@ -529,3 +546,13 @@ class NewGroupsSectionWidget extends StatelessWidget {
   }
 }
 
+String convertDate(String originalDate) {
+  // Parse the original date string to a DateTime object
+  DateTime dateTime = DateTime.parse(originalDate);
+
+  // Format the DateTime object to the desired format
+  String formattedDate = DateFormat('d MMM yyyy').format(dateTime);
+
+  // Return the formatted date
+  return formattedDate;
+}
