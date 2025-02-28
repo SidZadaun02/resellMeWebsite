@@ -643,14 +643,9 @@ class ReelsSectionWidget extends StatelessWidget {
                           print('Video URL: ${product.videoUrl}');
                           showDialog(
                             context: context,
-                            barrierDismissible: true, // Allows dismissal by tapping outside
-                            builder: (BuildContext context) {
-                              return Dialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: VideoDialogContent(videoUrl: product.videoUrl!),
-                              );
+                            barrierColor: Colors.black.withOpacity(0.8), // Semi-transparent background
+                            builder: (context) {
+                              return VideoContent(videoUrl: product.videoUrl!);
                             },
                           );
                           // If you only want to show one dialog for the first video, break out of the loop.
@@ -658,7 +653,6 @@ class ReelsSectionWidget extends StatelessWidget {
                         }
                       }
                     }
-
                   },
                   borderRadius: BorderRadius.circular(10),
                   splashColor: Colors.pink.withOpacity(0.3),
