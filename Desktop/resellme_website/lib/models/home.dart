@@ -59,6 +59,15 @@ class DataSection {
         return SingleCatalogSection.fromJson(json);
       case 'newGroups':
         return NewGroupsSection.fromJson(json);
+      case 'lowestPrices':
+            return LowestPriceSection.fromJson(json);
+      case 'category':
+        return CategorySection.fromJson(json);
+      case 'catalogs':
+        return CatalogsSection.fromJson(json);
+      case 'reels':
+      return ReelsSectionNew.fromJson(json);
+
       default:
         return DataSection(
           data: json['data'] as List<dynamic>? ?? [],
@@ -69,6 +78,239 @@ class DataSection {
           type: type,
         );
     }
+  }
+}
+
+
+class LowestPriceSection extends DataSection {
+  final List<LowestPrice> lowestPrices;
+
+  LowestPriceSection({
+    required this.lowestPrices,
+    String? imageUrl,
+    String? tag,
+    required int sectionId,
+    String? title,
+    String? type,
+  }) : super(data: lowestPrices, imageUrl: imageUrl, tag: tag, sectionId: sectionId, title: title, type: type);
+
+  factory LowestPriceSection.fromJson(Map<String, dynamic> json) {
+    return LowestPriceSection(
+      lowestPrices: (json['data'] as List<dynamic>? ?? [])
+          .map((item) => LowestPrice.fromJson(item as Map<String, dynamic>))
+          .toList(),
+      imageUrl: json['imageUrl'] as String?,
+      tag: json['tag'] as String?,
+      sectionId: json['sectionId'] as int? ?? 0,
+      title: json['title'] as String?,
+      type: json['type'] as String?,
+    );
+  }
+}
+
+class ReelsSectionNew extends DataSection {
+  final List<ReelNew> reels;
+
+  ReelsSectionNew({
+    required this.reels,
+    String? imageUrl,
+    String? tag,
+    required int sectionId,
+    String? title,
+    String? type,
+  }) : super(data: reels, imageUrl: imageUrl, tag: tag, sectionId: sectionId, title: title, type: type);
+
+  factory ReelsSectionNew.fromJson(Map<String, dynamic> json) {
+    return ReelsSectionNew(
+      reels: (json['data'] as List<dynamic>? ?? [])
+          .map((item) => ReelNew.fromJson(item as Map<String, dynamic>))
+          .toList(),
+      imageUrl: json['imageUrl'] as String?,
+      tag: json['tag'] as String?,
+      sectionId: json['sectionId'] as int? ?? 0,
+      title: json['title'] as String?,
+      type: json['type'] as String?,
+    );
+  }
+}
+
+class ReelNew {
+  final int ownerStatus;
+  final int salePer;
+  final String? city;
+  final String? lastCatalogTime;
+  final List<Offer>? offerJson;
+  final Catalog? catalog;
+  final int groupId;
+  final int ownerId;
+  final String? categoryName;
+  final String? participantInviteLink;
+  final int groupPlan;
+  final String? shortInfo;
+  final String? ownerName;
+  final bool isOwner;
+  final int chatNumber;
+  final bool isPublic;
+  final String? ownerInviteLink;
+  final bool isShippingFree;
+  final String? lastCatalogName;
+  final String? groupVideoId;
+  final double maxMargin;
+  final bool isCodAvailable;
+  final int maxCoinsPerOrder;
+  final bool isPinned;
+  final bool isVisitor;
+  final int returnPolicy;
+  final String? ownerDpUrl;
+  final int promotionScore;
+  final int counter;
+  final String? groupName;
+  final String? createdDate;
+  final String? dpUrl;
+  final bool isShipsafeEnabled;
+  final String? viewType;
+  final int verificationType;
+  final int maxCashbackPerOrder;
+  final bool isCodFree;
+  final int categoryId;
+
+  ReelNew({
+    required this.ownerStatus,
+    required this.salePer,
+    this.city,
+    this.lastCatalogTime,
+    this.offerJson,
+    this.catalog,
+    required this.groupId,
+    required this.ownerId,
+    this.categoryName,
+    this.participantInviteLink,
+    required this.groupPlan,
+    this.shortInfo,
+    this.ownerName,
+    required this.isOwner,
+    required this.chatNumber,
+    required this.isPublic,
+    this.ownerInviteLink,
+    required this.isShippingFree,
+    this.lastCatalogName,
+    this.groupVideoId,
+    required this.maxMargin,
+    required this.isCodAvailable,
+    required this.maxCoinsPerOrder,
+    required this.isPinned,
+    required this.isVisitor,
+    required this.returnPolicy,
+    this.ownerDpUrl,
+    required this.promotionScore,
+    required this.counter,
+    this.groupName,
+    this.createdDate,
+    this.dpUrl,
+    required this.isShipsafeEnabled,
+    this.viewType,
+    required this.verificationType,
+    required this.maxCashbackPerOrder,
+    required this.isCodFree,
+    required this.categoryId,
+  });
+
+  factory ReelNew.fromJson(Map<String, dynamic> json) {
+    return ReelNew(
+      ownerStatus: json['ownerStatus'] as int? ?? 0,
+      salePer: json['salePer'] as int? ?? 0,
+      city: json['city'] as String?,
+      lastCatalogTime: json['lastCatalogTime'] as String?,
+      offerJson: (json['offerJson'] as List<dynamic>? ?? [])
+          .map((item) => Offer.fromJson(item as Map<String, dynamic>))
+          .toList(),
+      catalog: json['catalog'] != null ? Catalog.fromJson(json['catalog'] as Map<String, dynamic>) : null,
+      groupId: json['groupId'] as int? ?? 0,
+      ownerId: json['ownerId'] as int? ?? 0,
+      categoryName: json['categoryName'] as String?,
+      participantInviteLink: json['participantInviteLink'] as String?,
+      groupPlan: json['groupPlan'] as int? ?? 0,
+      shortInfo: json['shortInfo'] as String?,
+      ownerName: json['ownerName'] as String?,
+      isOwner: json['isOwner'] as bool? ?? false,
+      chatNumber: json['chatNumber'] as int? ?? 0,
+      isPublic: json['isPublic'] as bool? ?? false,
+      ownerInviteLink: json['ownerInviteLink'] as String?,
+      isShippingFree: json['isShippingFree'] as bool? ?? false,
+      lastCatalogName: json['lastCatalogName'] as String?,
+      groupVideoId: json['groupVideoId'] as String?,
+      maxMargin: (json['maxMargin'] as num?)?.toDouble() ?? 0.0,
+      isCodAvailable: json['isCodAvailable'] as bool? ?? false,
+      maxCoinsPerOrder: json['maxCoinsPerOrder'] as int? ?? 0,
+      isPinned: json['isPinned'] as bool? ?? false,
+      isVisitor: json['isVisitor'] as bool? ?? false,
+      returnPolicy: json['returnPolicy'] as int? ?? 0,
+      ownerDpUrl: json['ownerDpUrl'] as String?,
+      promotionScore: json['promotionScore'] as int? ?? 0,
+      counter: json['counter'] as int? ?? 0,
+      groupName: json['groupName'] as String?,
+      createdDate: json['createdDate'] as String?,
+      dpUrl: json['dpUrl'] as String?,
+      isShipsafeEnabled: json['isShipsafeEnabled'] as bool? ?? false,
+      viewType: json['viewType'] as String?,
+      verificationType: json['verificationType'] as int? ?? 0,
+      maxCashbackPerOrder: json['maxCashbackPerOrder'] as int? ?? 0,
+      isCodFree: json['isCodFree'] as bool? ?? false,
+      categoryId: json['categoryId'] as int? ?? 0,
+    );
+  }
+}
+
+// Supporting Models for Reel
+class Offer {
+  final String? couponCode;
+  final String? couponType;
+  final int couponAmount;
+
+  Offer({
+    this.couponCode,
+    this.couponType,
+    required this.couponAmount,
+  });
+
+  factory Offer.fromJson(Map<String, dynamic> json) {
+    return Offer(
+      couponCode: json['couponCode'] as String?,
+      couponType: json['couponType'] as String?,
+      couponAmount: json['couponAmount'] as int? ?? 0,
+    );
+  }
+}
+
+
+
+
+class LowestPrice {
+  final int id;
+  final String? title;
+  final String? imageUrl;
+  final int maxPrice;
+  final int minPrice;
+  final String? bottomText;
+
+  LowestPrice({
+    required this.id,
+    this.title,
+    this.imageUrl,
+    required this.maxPrice,
+    required this.minPrice,
+    this.bottomText,
+  });
+
+  factory LowestPrice.fromJson(Map<String, dynamic> json) {
+    return LowestPrice(
+      id: json['id'] as int? ?? 0,
+      title: json['title'] as String?,
+      imageUrl: json['imageUrl'] as String?,
+      maxPrice: json['maxPrice'] as int? ?? 0,
+      minPrice: json['minPrice'] as int? ?? 0,
+      bottomText: json['bottomText'] as String?,
+    );
   }
 }
 
@@ -544,6 +786,220 @@ class NewGroup {
       groupLogo: json['groupLogo'] as String?,
       groupName: json['groupName'] as String?,
       catalogImage: json['catalogImage'] as String?,
+    );
+  }
+}
+
+class CategorySection extends DataSection {
+  final List<Category> categories;
+
+  CategorySection({
+    required this.categories,
+    String? imageUrl,
+    String? tag,
+    required int sectionId,
+    String? title,
+    String? type,
+  }) : super(data: categories, imageUrl: imageUrl, tag: tag, sectionId: sectionId, title: title, type: type);
+
+  factory CategorySection.fromJson(Map<String, dynamic> json) {
+    return CategorySection(
+      categories: (json['data'] as List<dynamic>? ?? [])
+          .map((item) => Category.fromJson(item as Map<String, dynamic>))
+          .toList(),
+      imageUrl: json['imageUrl'] as String?,
+      tag: json['tag'] as String?,
+      sectionId: json['sectionId'] as int? ?? 0,
+      title: json['title'] as String?,
+      type: json['type'] as String?,
+    );
+  }
+}
+
+class Category {
+  final bool isLeaf;
+  final bool isLive;
+  final bool isRoot;
+  final String? imageUrl;
+  final int categoryId;
+  final String? categoryName;
+  final List<dynamic>? discoverSection; // Adjust based on actual content
+  final int parentCategoryId;
+
+  Category({
+    required this.isLeaf,
+    required this.isLive,
+    required this.isRoot,
+    this.imageUrl,
+    required this.categoryId,
+    this.categoryName,
+    this.discoverSection,
+    required this.parentCategoryId,
+  });
+
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(
+      isLeaf: json['isLeaf'] as bool? ?? false,
+      isLive: json['isLive'] as bool? ?? false,
+      isRoot: json['isRoot'] as bool? ?? false,
+      imageUrl: json['imageUrl'] as String?,
+      categoryId: json['categoryId'] as int? ?? 0,
+      categoryName: json['categoryName'] as String?,
+      discoverSection: json['discoverSection'] as List<dynamic>?,
+      parentCategoryId: json['parentCategoryId'] as int? ?? 0,
+    );
+  }
+}
+
+class CatalogsSection extends DataSection {
+  final List<CatalogGroup> catalogGroups;
+
+  CatalogsSection({
+    required this.catalogGroups,
+    String? imageUrl,
+    String? tag,
+    required int sectionId,
+    String? title,
+    String? type,
+  }) : super(data: catalogGroups, imageUrl: imageUrl, tag: tag, sectionId: sectionId, title: title, type: type);
+
+  factory CatalogsSection.fromJson(Map<String, dynamic> json) {
+    return CatalogsSection(
+      catalogGroups: (json['data'] as List<dynamic>? ?? [])
+          .map((item) => CatalogGroup.fromJson(item as Map<String, dynamic>))
+          .toList(),
+      imageUrl: json['imageUrl'] as String?,
+      tag: json['tag'] as String?,
+      sectionId: json['sectionId'] as int? ?? 0,
+      title: json['title'] as String?,
+      type: json['type'] as String?,
+    );
+  }
+}
+
+class CatalogGroup {
+  final int ownerStatus;
+  final int salePer;
+  final String? city;
+  final String? lastCatalogTime;
+  final List<Offer>? offerJson;
+  final Catalog? catalog;
+  final int groupId;
+  final int ownerId;
+  final String? categoryName;
+  final String? participantInviteLink;
+  final int groupPlan;
+  final String? shortInfo;
+  final String? ownerName;
+  final bool isOwner;
+  final int chatNumber;
+  final bool isPublic;
+  final String? ownerInviteLink;
+  final bool isShippingFree;
+  final String? lastCatalogName;
+  final String? groupVideoId;
+  final double maxMargin;
+  final bool isCodAvailable;
+  final int maxCoinsPerOrder;
+  final bool isPinned;
+  final bool isVisitor;
+  final int returnPolicy;
+  final String? ownerDpUrl;
+  final int promotionScore;
+  final int counter;
+  final String? groupName;
+  final String? createdDate;
+  final String? dpUrl;
+  final bool isShipsafeEnabled;
+  final String? viewType;
+  final int verificationType;
+  final int maxCashbackPerOrder;
+  final bool isCodFree;
+  final int categoryId;
+
+  CatalogGroup({
+    required this.ownerStatus,
+    required this.salePer,
+    this.city,
+    this.lastCatalogTime,
+    this.offerJson,
+    this.catalog,
+    required this.groupId,
+    required this.ownerId,
+    this.categoryName,
+    this.participantInviteLink,
+    required this.groupPlan,
+    this.shortInfo,
+    this.ownerName,
+    required this.isOwner,
+    required this.chatNumber,
+    required this.isPublic,
+    this.ownerInviteLink,
+    required this.isShippingFree,
+    this.lastCatalogName,
+    this.groupVideoId,
+    required this.maxMargin,
+    required this.isCodAvailable,
+    required this.maxCoinsPerOrder,
+    required this.isPinned,
+    required this.isVisitor,
+    required this.returnPolicy,
+    this.ownerDpUrl,
+    required this.promotionScore,
+    required this.counter,
+    this.groupName,
+    this.createdDate,
+    this.dpUrl,
+    required this.isShipsafeEnabled,
+    this.viewType,
+    required this.verificationType,
+    required this.maxCashbackPerOrder,
+    required this.isCodFree,
+    required this.categoryId,
+  });
+
+  factory CatalogGroup.fromJson(Map<String, dynamic> json) {
+    return CatalogGroup(
+      ownerStatus: json['ownerStatus'] as int? ?? 0,
+      salePer: json['salePer'] as int? ?? 0,
+      city: json['city'] as String?,
+      lastCatalogTime: json['lastCatalogTime'] as String?,
+      offerJson: (json['offerJson'] as List<dynamic>? ?? [])
+          .map((item) => Offer.fromJson(item as Map<String, dynamic>))
+          .toList(),
+      catalog: json['catalog'] != null ? Catalog.fromJson(json['catalog'] as Map<String, dynamic>) : null,
+      groupId: json['groupId'] as int? ?? 0,
+      ownerId: json['ownerId'] as int? ?? 0,
+      categoryName: json['categoryName'] as String?,
+      participantInviteLink: json['participantInviteLink'] as String?,
+      groupPlan: json['groupPlan'] as int? ?? 0,
+      shortInfo: json['shortInfo'] as String?,
+      ownerName: json['ownerName'] as String?,
+      isOwner: json['isOwner'] as bool? ?? false,
+      chatNumber: json['chatNumber'] as int? ?? 0,
+      isPublic: json['isPublic'] as bool? ?? false,
+      ownerInviteLink: json['ownerInviteLink'] as String?,
+      isShippingFree: json['isShippingFree'] as bool? ?? false,
+      lastCatalogName: json['lastCatalogName'] as String?,
+      groupVideoId: json['groupVideoId'] as String?,
+      maxMargin: (json['maxMargin'] as num?)?.toDouble() ?? 0.0,
+      isCodAvailable: json['isCodAvailable'] as bool? ?? false,
+      maxCoinsPerOrder: json['maxCoinsPerOrder'] as int? ?? 0,
+      isPinned: json['isPinned'] as bool? ?? false,
+      isVisitor: json['isVisitor'] as bool? ?? false,
+      returnPolicy: json['returnPolicy'] as int? ?? 0,
+      ownerDpUrl: json['ownerDpUrl'] as String?,
+      promotionScore: json['promotionScore'] as int? ?? 0,
+      counter: json['counter'] as int? ?? 0,
+      groupName: json['groupName'] as String?,
+      createdDate: json['createdDate'] as String?,
+      dpUrl: json['dpUrl'] as String?,
+      isShipsafeEnabled: json['isShipsafeEnabled'] as bool? ?? false,
+      viewType: json['viewType'] as String?,
+      verificationType: json['verificationType'] as int? ?? 0,
+      maxCashbackPerOrder: json['maxCashbackPerOrder'] as int? ?? 0,
+      isCodFree: json['isCodFree'] as bool? ?? false,
+      categoryId: json['categoryId'] as int? ?? 0,
     );
   }
 }

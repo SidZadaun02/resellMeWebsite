@@ -167,12 +167,10 @@ class ApiService {
   Future<Response> getHomeScreenData(int userId, int catalogId, String token, int offset) async {
     try {
       final response = await _dio.get(
-        '${baseUrl}GroupEngine/ViewHomeServlet',
+        '${baseUrl}GroupEngine/SearchSectionWVideoServlet',
         queryParameters: {
           'userId': userId,
-          'categoryId': catalogId,
-          'searchText':"",
-          'offset':offset
+          'onlyVideo': false
         },
         options: Options(
           headers: {

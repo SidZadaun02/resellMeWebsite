@@ -372,7 +372,7 @@ class _CommentsReviewsBottomSheetState extends State<CommentsReviewsBottomSheet>
                 Expanded(
                   child: TextField(
                     controller: _replyController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: "Write a reply...",
                       border: OutlineInputBorder(),
                     ),

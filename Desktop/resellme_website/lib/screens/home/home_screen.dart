@@ -24,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isLoading = true;
   String? errorMessage;
   int offset = 0;
-  final ScrollController _scrollController = ScrollController();
+  // final ScrollController _scrollController = ScrollController();
   bool isFetchingMore = false;
 
   @override
@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
       uri: Uri(path: "/home"),
     );
 
-    _scrollController.addListener(_onScroll);
+    // _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       fetchHome(1, -1, "token", true, 12);
     });
@@ -45,23 +45,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    // _scrollController.dispose();
     super.dispose();
   }
 
 
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent * 0.7 &&
-        !isFetchingMore &&
-        !isLoading &&
-        responses != null) {
-      setState(() {
-        isFetchingMore = true;
-      });
-      fetchMoreData();
-    }
-  }
+  // void _onScroll() {
+  //   if (_scrollController.position.pixels >=
+  //       _scrollController.position.maxScrollExtent * 0.7 &&
+  //       !isFetchingMore &&
+  //       !isLoading &&
+  //       responses != null) {
+  //     setState(() {
+  //       isFetchingMore = true;
+  //     });
+  //     fetchMoreData();
+  //   }
+  // }
 
   Future<void> fetchHome(
       int userId, int catalogId, String token, bool editPrice, int categoryId) async {
@@ -104,16 +104,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> fetchMoreData() async {
     // Store the current scroll position before fetching new data
-    final double currentPosition = _scrollController.position.pixels;
+    // final double currentPosition = _scrollController.position.pixels;
 
     await fetchHome(1, -1, "token", true, 12);
 
     // Restore the scroll position after new data is loaded
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.jumpTo(currentPosition);
-      }
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   if (_scrollController.hasClients) {
+    //     _scrollController.jumpTo(currentPosition);
+    //   }
+    // });
 
     setState(() {
       isFetchingMore = false;
@@ -140,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
           : responses == null
           ? const Center(child: Text('No data available'))
           : ListView.builder(
-        controller: _scrollController,
+        // controller: _scrollController,
         itemCount: responses!.data.length + (isFetchingMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == responses!.data.length && isFetchingMore) {
@@ -154,6 +154,18 @@ class _HomeScreenState extends State<HomeScreen> {
             return BannerSectionWidget(section: section);
           } else if (section is SingleCatalogSection) {
             return SingleCatalogSectionWidget(section: section);
+          }else if (section is ReelsSection) {
+            return ReelsSectionOldWidget(section: section);
+          } else if (section is ReelsSectionNew) {
+            return ReelsSectionWidget(section: section);
+          } else if (section is NewGroupsSection) {
+            return NewGroupsSectionWidget(section: section);
+          } else if (section is CategorySection) {
+            return CategorySectionWidget(section: section);
+          } else if (section is CatalogsSection) {
+            return CatalogsSectionWidget(section: section);
+          } else if (section is LowestPriceSection) {
+            return LowestPriceSectionWidget(section: section);
           }
           return const SizedBox.shrink();
         },
@@ -362,8 +374,8 @@ class SingleCatalogSectionWidget extends StatelessWidget {
                                 ),
                                 if (product.videoUrl != null)
                                   const Positioned(
-                                    top: 40,
-                                    left: 60,
+                                    top: 80,
+                                    left: 80,
                                     child: Icon(Icons.play_circle_fill, color: Colors.white, size: 40),
                                   ),
                               ],
@@ -375,7 +387,7 @@ class SingleCatalogSectionWidget extends StatelessWidget {
                                 children: [
                                   const SizedBox(height: 4),
                                   Text(
-                                    unescapeJava(catalog.catalogDesc?.split('\n').first ?? 'Something testing'),
+                                    unescapeJava(catalog.catalogDesc?.split('\n').first ?? ''),
                                     style: const TextStyle(fontSize: 14),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -420,15 +432,11 @@ class SingleCatalogSectionWidget extends StatelessWidget {
                       )
                           : null,
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'About the brand',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
                           Text(
                             'Owner: ${catalogData.ownerName ?? ''}',
                             style: const TextStyle(fontSize: 14),
@@ -484,7 +492,7 @@ class SingleCatalogSectionWidget extends StatelessWidget {
               },
               child: Text(
                 'Comments & Reviews',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -536,6 +544,458 @@ class NewGroupsSectionWidget extends StatelessWidget {
                     Text(group.groupName ?? 'No Name', style: const TextStyle(fontSize: 14)),
                     Text(group.subTitle ?? '', style: const TextStyle(fontSize: 12, color: Colors.grey)),
                   ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class ReelsSectionWidget extends StatelessWidget {
+  final ReelsSectionNew section;
+
+  const ReelsSectionWidget({required this.section, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            section.title ?? 'Reels & Videos',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        SizedBox(
+          height: 250,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: section.reels.length,
+            itemBuilder: (context, index) {
+              final reel = section.reels[index];
+              final catalog = reel.catalog;
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: InkWell(
+                  onTap: () {
+                    if (catalog != null) {
+                      navigateToCatalog(context, catalog.catalogId);
+                    }
+                  },
+                  child: SizedBox(
+                    width: 150,
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                            child: CachedNetworkImage(
+                              imageUrl: catalog?.products?.isNotEmpty == true
+                                  ? catalog!.products![0].imageUrl ?? ''
+                                  : '',
+                              height: 150,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                              errorWidget: (context, url, error) => const Icon(Icons.error),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  reel.groupName ?? 'Unknown Group',
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                if (catalog != null)
+                                  Text(
+                                    catalog.catalogName ?? '',
+                                    style: const TextStyle(fontSize: 12),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                Text(
+                                  '₹${catalog?.customerPrice?.toStringAsFixed(0) ?? 'N/A'}',
+                                  style: TextStyle(fontSize: 14, color: Colors.red[700]),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class CategorySectionWidget extends StatelessWidget {
+  final CategorySection section;
+
+  const CategorySectionWidget({required this.section, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            section.title ?? 'Categories',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        SizedBox(
+          height: 150,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: section.categories.length,
+            itemBuilder: (context, index) {
+              final category = section.categories[index];
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: CachedNetworkImage(
+                        imageUrl: category.imageUrl ?? '',
+                        width: 100,
+                        height: 100,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                        errorWidget: (context, url, error) => const Icon(Icons.error),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      category.categoryName ?? 'Unknown Category',
+                      style: const TextStyle(fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class CatalogsSectionWidget extends StatelessWidget {
+  final CatalogsSection section;
+
+  const CatalogsSectionWidget({required this.section, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            section.title ?? 'Catalogs',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        SizedBox(
+          height: 250,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: section.catalogGroups.length,
+            itemBuilder: (context, index) {
+              final catalogGroup = section.catalogGroups[index];
+              final catalog = catalogGroup.catalog;
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: InkWell(
+                  onTap: () {
+                    if (catalog != null) {
+                      navigateToCatalog(context, catalog.catalogId);
+                    }
+                  },
+                  child: SizedBox(
+                    width: 150,
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                            child: CachedNetworkImage(
+                              imageUrl: catalog?.products?.isNotEmpty == true
+                                  ? catalog!.products![0].imageUrl ?? ''
+                                  : '',
+                              height: 150,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                              errorWidget: (context, url, error) => const Icon(Icons.error),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  catalogGroup.groupName ?? 'Unknown Group',
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                if (catalog != null)
+                                  Text(
+                                    catalog.catalogName ?? '',
+                                    style: const TextStyle(fontSize: 12),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                Text(
+                                  '₹${catalog?.customerPrice?.toStringAsFixed(0) ?? 'N/A'}',
+                                  style: TextStyle(fontSize: 14, color: Colors.red[700]),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+
+class LowestPriceSectionWidget extends StatelessWidget {
+  final LowestPriceSection section;
+
+  const LowestPriceSectionWidget({required this.section, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            section.title ?? 'Lowest Prices',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        SizedBox(
+          height: 260, // Adjusted height for compact display
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: section.lowestPrices.length,
+            itemBuilder: (context, index) {
+              final lowestPrice = section.lowestPrices[index];
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SizedBox(
+                  width: 200,
+                  child: InkWell(
+                    onTap: () {
+                      // Navigate to a screen based on the lowest price item
+                      navigateToCatalog(
+                        context,
+                        lowestPrice.id,
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          ClipRRect(
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                            child: CachedNetworkImage(
+                              imageUrl: lowestPrice.imageUrl ?? '',
+                              height: 180,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                              errorWidget: (context, url, error) => const Icon(Icons.error),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  lowestPrice.title ?? 'Unknown Item',
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  unescapeJava(lowestPrice.bottomText ?? '₹${lowestPrice.maxPrice}'),
+                                  style: TextStyle(fontSize: 12, color: Colors.red[700]),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+
+
+// Assuming unescapeJava is defined elsewhere; if not, here's a simple implementation
+String unescapeJava(String text) {
+  return text.replaceAll('\\u20B9', '₹'); // Replace Unicode rupee symbol
+}
+
+
+class ReelsSectionOldWidget extends StatelessWidget {
+  final ReelsSection section;
+
+  const ReelsSectionOldWidget({required this.section, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            section.title ?? 'Reels & Videos',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        SizedBox(
+          height: 200, // Adjusted height for reels
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: section.reels.length,
+            itemBuilder: (context, index) {
+              final reel = section.reels[index];
+              final totalReels = int.tryParse(reel.totalReels ?? '0') ?? 0;
+              final watchedReels = int.tryParse(reel.watchedReels ?? '0') ?? 0;
+              final progress = totalReels > 0 ? watchedReels / totalReels : 0.0;
+
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SizedBox(
+                  width: 120,
+                  child: InkWell(
+                    onTap: () {
+                      // Add navigation to a reels viewer screen if needed
+                      print('Tapped on reel for group: ${reel.groupName}');
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                                child: CachedNetworkImage(
+                                  imageUrl: reel.thumbUrl ?? '',
+                                  height: 140,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                                  errorWidget: (context, url, error) => const Icon(Icons.error),
+                                ),
+                              ),
+                              const Positioned(
+                                top: 60,
+                                left: 45,
+                                child: Icon(
+                                  Icons.play_circle_fill,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  reel.groupName ?? 'Unknown Group',
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: LinearProgressIndicator(
+                                        value: progress,
+                                        backgroundColor: Colors.grey[300],
+                                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.pink),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '$watchedReels/$totalReels',
+                                      style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               );
             },
