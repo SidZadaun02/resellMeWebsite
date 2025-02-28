@@ -10,7 +10,9 @@ import 'package:intl/intl.dart';
 import '../../models/home.dart'; // Assuming this contains your ResponseModel and related classes
 import '../../network/api_service.dart';
 import '../comment/comment_and_review_sheet.dart';
+import '../group/group_screen.dart';
 import '../product/views/product_responsive.dart';
+import '../video/video_play_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -503,7 +505,8 @@ class SingleCatalogSectionWidget extends StatelessWidget {
   }
 }
 
-// New Groups Section Widget
+
+
 class NewGroupsSectionWidget extends StatelessWidget {
   final NewGroupsSection section;
 
@@ -530,20 +533,35 @@ class NewGroupsSectionWidget extends StatelessWidget {
               final group = section.newGroups[index];
               return Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  children: [
-                    CachedNetworkImage(
-                      imageUrl: group.catalogImage ?? '',
-                      width: 120,
-                      height: 120,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                      errorWidget: (context, url, error) => const Icon(Icons.error),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(group.groupName ?? 'No Name', style: const TextStyle(fontSize: 14)),
-                    Text(group.subTitle ?? '', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                  ],
+                child: InkWell(
+                  onTap: () {
+                    // Navigate to a screen for the new group
+                    navigateToNewGroup(context, group);
+                  },
+                  borderRadius: BorderRadius.circular(10), // Matches card radius for ripple effect
+                  child: Column(
+                    children: [
+                      CachedNetworkImage(
+                        imageUrl: group.catalogImage ?? '',
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                        errorWidget: (context, url, error) => const Icon(Icons.error),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        group.groupName ?? 'No Name',
+                        style: const TextStyle(fontSize: 14),
+                        textAlign: TextAlign.center,
+                      ),
+                      Text(
+                        group.subTitle ?? '',
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -552,7 +570,21 @@ class NewGroupsSectionWidget extends StatelessWidget {
       ],
     );
   }
+
+  // Helper function to navigate to a new group screen
+  void navigateToNewGroup(BuildContext context, NewGroup group, ) {
+    // For now, navigate to BrandProfileScreen as an example
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BrandProfileScreen(profile: group),
+      ),
+    );
+  }
 }
+
+
 
 class ReelsSectionWidget extends StatelessWidget {
   final ReelsSectionNew section;
@@ -566,13 +598,34 @@ class ReelsSectionWidget extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Text(
-            section.title ?? 'Reels & Videos',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.video_library, color: Colors.pink),
+                  const SizedBox(width: 8),
+                  Text(
+                    section.title ?? 'Reels & Videos',
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              TextButton(
+                onPressed: () {
+                  // Navigate to a "See All" screen (implement as needed)
+                  print('See All tapped');
+                },
+                child: const Text(
+                  'SEE ALL',
+                  style: TextStyle(color: Colors.pink, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
           ),
         ),
         SizedBox(
-          height: 250,
+          height: 280,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: section.reels.length,
@@ -583,10 +636,32 @@ class ReelsSectionWidget extends StatelessWidget {
                 padding: const EdgeInsets.all(8.0),
                 child: InkWell(
                   onTap: () {
-                    if (catalog != null) {
-                      navigateToCatalog(context, catalog.catalogId);
+                    // Show VideoPlayScreen in a dialog
+                    if (catalog?.products?.isNotEmpty == true) {
+                      for (var product in catalog!.products!) {
+                        if (product.isVideo == true && product.videoUrl != null) {
+                          print('Video URL: ${product.videoUrl}');
+                          showDialog(
+                            context: context,
+                            barrierDismissible: true, // Allows dismissal by tapping outside
+                            builder: (BuildContext context) {
+                              return Dialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: VideoDialogContent(videoUrl: product.videoUrl!),
+                              );
+                            },
+                          );
+                          // If you only want to show one dialog for the first video, break out of the loop.
+                          break;
+                        }
+                      }
                     }
+
                   },
+                  borderRadius: BorderRadius.circular(10),
+                  splashColor: Colors.pink.withOpacity(0.3),
                   child: SizedBox(
                     width: 150,
                     child: Card(
@@ -595,18 +670,32 @@ class ReelsSectionWidget extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ClipRRect(
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-                            child: CachedNetworkImage(
-                              imageUrl: catalog?.products?.isNotEmpty == true
-                                  ? catalog!.products![0].imageUrl ?? ''
-                                  : '',
-                              height: 150,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                              errorWidget: (context, url, error) => const Icon(Icons.error),
-                            ),
+                          Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                                child: CachedNetworkImage(
+                                  imageUrl: catalog?.products?.isNotEmpty == true
+                                      ? catalog!.products![0].imageUrl ?? ''
+                                      : '',
+                                  height: 180,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                                  errorWidget: (context, url, error) => const Icon(Icons.error),
+                                ),
+                              ),
+                              const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(40.0),
+                                  child: Icon(
+                                    Icons.play_circle_fill,
+                                    color: Colors.white,
+                                    size: 40,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -615,7 +704,7 @@ class ReelsSectionWidget extends StatelessWidget {
                               children: [
                                 Text(
                                   reel.groupName ?? 'Unknown Group',
-                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -626,10 +715,6 @@ class ReelsSectionWidget extends StatelessWidget {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                Text(
-                                  '₹${catalog?.customerPrice?.toStringAsFixed(0) ?? 'N/A'}',
-                                  style: TextStyle(fontSize: 14, color: Colors.red[700]),
-                                ),
                               ],
                             ),
                           ),
@@ -646,6 +731,10 @@ class ReelsSectionWidget extends StatelessWidget {
     );
   }
 }
+
+
+
+
 
 class CategorySectionWidget extends StatelessWidget {
   final CategorySection section;
