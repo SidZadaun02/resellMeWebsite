@@ -24,7 +24,7 @@ class _VideoDialogContentState extends State<VideoDialogContent> {
 
   Future<void> _initializeVideo() async {
     try {
-      _controller = VideoPlayerController.network(widget.videoUrl)
+      _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
         ..initialize().then((_) {
           if (mounted) {
             setState(() {
@@ -83,7 +83,7 @@ class _VideoDialogContentState extends State<VideoDialogContent> {
           // The video is wrapped in an AspectRatio to enforce 16:9.
           SizedBox(
             width: dialogWidth,
-            height: dialogHeight-150,
+            height: dialogHeight-240,
             child: VideoPlayer(_controller),
           ),
           const SizedBox(height: 16),
