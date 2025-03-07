@@ -186,6 +186,76 @@ class ApiService {
     }
   }
 
+  Future<Response> getGroupData(int userId, int groupId, String token, int offset) async {
+    try {
+      final response = await _dio.get(
+        '${baseUrl}CatalogEngine/FetchCatalogsServlet',
+        queryParameters: {
+          'userId': userId,
+          'groupId': groupId,
+          'startPosition': offset,
+        },
+        options: Options(
+          headers: {
+            'Authorization': token,
+            'Cache-Control': 'no-cache',
+            'version': 795,
+          },
+        ),
+      );
+      return response;
+    } catch (e) {
+      throw Exception('Failed to load products: $e');
+    }
+  }
+
+  Future<Response> getGroup(int userId, int groupId, String token) async {
+    try {
+      final response = await _dio.get(
+        '${baseUrl}GroupEngine/ViewGroupsServlet',
+        queryParameters: {
+          'userId': userId,
+          'groupId': groupId,
+          'filterType': 'single',
+        },
+        options: Options(
+          headers: {
+            'Authorization': token,
+            'Cache-Control': 'no-cache',
+            'version': 795,
+          },
+        ),
+      );
+      return response;
+    } catch (e) {
+      throw Exception('Failed to load products: $e');
+    }
+  }
+
+  Future<Response> getGroupRatings(int userId, int groupId, String token) async {
+    try {
+      final response = await _dio.get(
+        '${baseUrl}GroupEngine/GroupInfoServlet',
+        queryParameters: {
+          'userId': userId,
+          'groupId': groupId,
+          'infoType': 'ratingAndConnections',
+        },
+        options: Options(
+          headers: {
+            'Authorization': token,
+            'Cache-Control': 'no-cache',
+            'version': 795,
+          },
+        ),
+      );
+      return response;
+    } catch (e) {
+      throw Exception('Failed to load products: $e');
+    }
+  }
+
+
   Future<Response> getSizesOfProduct(int userId, int catalogId, String token) async {
     try {
       final response = await _dio.get(

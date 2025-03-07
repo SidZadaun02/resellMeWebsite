@@ -641,13 +641,13 @@ class ReelsSectionWidget extends StatelessWidget {
                       for (var product in catalog!.products!) {
                         if (product.isVideo == true && product.videoUrl != null) {
                           print('Video URL: ${product.videoUrl}');
-                          showDialog(
-                            context: context,
-                            barrierColor: Colors.black.withOpacity(0.8), // Semi-transparent background
-                            builder: (context) {
-                              return VideoContent(videoUrl: product.videoUrl!);
-                            },
-                          );
+                          // showDialog(
+                          //   context: context,
+                          //   barrierColor: Colors.black.withOpacity(0.8), // Semi-transparent background
+                          //   builder: (context) {
+                          //     return VideoContent(videoUrl: product.videoUrl!);
+                          //   },
+                          // );
                           // If you only want to show one dialog for the first video, break out of the loop.
                           break;
                         }

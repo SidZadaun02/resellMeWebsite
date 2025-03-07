@@ -1,7 +1,14 @@
-import 'package:ResellMe/models/home.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
+
+import '../../models/Group.dart';
+import '../../models/home.dart';
+import '../../network/api_service.dart';
+import '../product/views/product_responsive.dart';
 
 class BrandProfileScreen extends StatefulWidget {
   final NewGroup profile;
@@ -14,9 +21,185 @@ class BrandProfileScreen extends StatefulWidget {
 
 class _BrandProfileScreenState extends State<BrandProfileScreen> {
   bool isFollowing = false;
+  bool isLoading = false;
+  bool isLoadingMore = false;
+  String? errorMessage;
+  int offset = 0;
+  ResponseModel2? responses;
+  GroupData? responsesGroup; // Made nullable to avoid late initialization issues
+  GroupProfileData?  groupProfileData;
+  late ApiService _apiService;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    final dio = Dio();
+    _apiService = ApiService(dio);
+
+    SystemNavigator.routeInformationUpdated(
+      uri:  Uri(path: "/group"),
+    );
+
+    _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      fetchGroupRatings(1, "token");
+      fetchGroup(1, "token");
+      fetchGroupData(1, "token");
+    });
+  }
+
+  Future<void> fetchGroupData(int userId, String token) async {
+    try {
+      setState(() {
+        isLoading = true;
+        errorMessage = null;
+      });
+
+      final response = await _apiService.getGroupData(userId, widget.profile.groupId, token, offset);
+      final responseData = response.data is String
+          ? jsonDecode(response.data) as Map<String, dynamic>
+          : response.data as Map<String, dynamic>;
+
+      setState(() {
+        if (responses == null) {
+          responses = ResponseModel2.fromJson(responseData);
+        } else {
+          final newData = ResponseModel2.fromJson(responseData).data;
+          responses!.data.addAll(newData);
+        }
+        isLoading = false;
+        offset = responses!.data.length;
+        print('Response data (catalogs): $offset');
+      });
+    } catch (e, stackTrace) {
+      print('Failed to fetch products: $e');
+      print('Stack trace: $stackTrace');
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Failed to load product data: $e';
+      });
+    }
+  }
+
+  Future<void> fetchGroupRatings(int userId, String token) async {
+    try {
+      setState(() {
+        isLoading = true;
+        errorMessage = null;
+      });
+
+      final response = await _apiService.getGroupRatings(userId, widget.profile.groupId, token);
+      final responseData = response.data is String
+          ? jsonDecode(response.data) as Map<String, dynamic>
+          : response.data as Map<String, dynamic>;
+
+      print('Response data (group): $responseData');
+
+      if (responseData is Map<String, dynamic> && responseData.containsKey('data')) {
+        final dataMap = responseData['data'] as Map<String, dynamic>; // Extract the nested data object
+        print('Nested data: $dataMap'); // Debug the nested data
+        setState(() {
+          groupProfileData = GroupProfileData.fromJson(dataMap); // Parse the nested data
+          print('Response data (group): rating=${groupProfileData?.rating}, numRatings=${groupProfileData?.numRatings}, connections=${groupProfileData?.connections}');
+          isLoading = false; // Move isLoading = false inside setState
+        });
+      } else {
+        throw Exception('Invalid response format: Missing "data" field or invalid JSON');
+      }
+    } catch (e, stackTrace) {
+      print('Failed to fetch group data: $e');
+      print('Stack trace: $stackTrace');
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Failed to load group data: $e';
+      });
+    }
+  }
+
+  Future<void> fetchGroup(int userId, String token) async {
+    try {
+      setState(() {
+        isLoading = true;
+        errorMessage = null;
+      });
+
+      final response = await _apiService.getGroup(userId, widget.profile.groupId, token);
+      final responseData = response.data is String
+          ? jsonDecode(response.data) as Map<String, dynamic>
+          : response.data as Map<String, dynamic>;
+
+      if (responseData is Map<String, dynamic> && responseData.containsKey('data')) {
+        setState(() {
+          responsesGroup = ResponseModel3.fromJson(responseData).data;
+          print('Response data (group): $responsesGroup');
+        });
+      } else {
+        throw Exception('Invalid response format: Missing "data" field or invalid JSON');
+      }
+    } catch (e, stackTrace) {
+      print('Failed to fetch group data: $e');
+      print('Stack trace: $stackTrace');
+      setState(() {
+        errorMessage = 'Failed to load group data: $e';
+      });
+    }
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 50 && !isLoadingMore) {
+      fetchMoreData(1, "token");
+    }
+  }
+
+  Future<void> fetchMoreData(int userId, String token) async {
+    if (isLoadingMore) return;
+
+    try {
+      setState(() {
+        isLoadingMore = true;
+      });
+
+      final response = await _apiService.getGroupData(userId, widget.profile.groupId, token, offset);
+      final responseData = response.data is String
+          ? jsonDecode(response.data) as Map<String, dynamic>
+          : response.data as Map<String, dynamic>;
+
+      setState(() {
+        final newData = ResponseModel2.fromJson(responseData).data;
+        responses!.data.addAll(newData);
+        offset = responses!.data.length;
+        isLoadingMore = false;
+        print('Loaded more data: $offset');
+      });
+    } catch (e) {
+      print('Failed to fetch more products: $e');
+      setState(() {
+        isLoadingMore = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to load more products')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // Calculate the number of columns based on screen width
+  int _calculateCrossAxisCount(double screenWidth) {
+    const double minItemWidth = 150.0; // Minimum width for each grid item
+    return (screenWidth / minItemWidth).floor().clamp(2, 4); // Between 2 and 4 columns
+  }
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final int crossAxisCount = _calculateCrossAxisCount(screenWidth);
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -26,7 +209,7 @@ class _BrandProfileScreenState extends State<BrandProfileScreen> {
         title: Row(
           children: [
             Text(
-              widget.profile.groupName ?? 'SD Collection',
+              responsesGroup?.groupName ?? widget.profile.groupName ?? 'SD Collection',
               style: GoogleFonts.poppins(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -47,6 +230,7 @@ class _BrandProfileScreenState extends State<BrandProfileScreen> {
         ],
       ),
       body: SingleChildScrollView(
+        controller: _scrollController,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -57,11 +241,11 @@ class _BrandProfileScreenState extends State<BrandProfileScreen> {
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundImage: CachedNetworkImageProvider(widget.profile.groupLogo ?? ''),
+                    backgroundImage: CachedNetworkImageProvider(responsesGroup?.dpUrl ?? widget.profile.groupLogo ?? ''),
                     onBackgroundImageError: (exception, stackTrace) => const Icon(Icons.error),
-                    child: widget.profile.groupLogo == null || widget.profile.groupLogo!.isEmpty
+                    child: (responsesGroup?.dpUrl ?? widget.profile.groupLogo) == null || (responsesGroup?.dpUrl ?? widget.profile.groupLogo)!.isEmpty
                         ? Text(
-                      widget.profile.groupName?.substring(0, 1) ?? 'S',
+                      responsesGroup?.groupName?.substring(0, 1) ?? widget.profile.groupName?.substring(0, 1) ?? 'S',
                       style: const TextStyle(color: Colors.black, fontSize: 20),
                     )
                         : null,
@@ -74,26 +258,26 @@ class _BrandProfileScreenState extends State<BrandProfileScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              '${5} ★',
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                             Text(
+                              '${groupProfileData?.rating??'5'} ★',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
-                            Text(
-                              '${5} ratings',
-                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                             Text(
+                              '${groupProfileData?.numRatings??'5'} ratings',
+                              style: TextStyle(fontSize: 12, color: Colors.grey),
                             ),
                           ],
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              '${100}k Followers',
-                              style: const TextStyle(fontSize: 12),
+                             Text(
+                              '${groupProfileData?.connections??'5'} Followers',
+                              style: TextStyle(fontSize: 12),
                             ),
-                            Text(
-                              '${100} Posts',
-                              style: const TextStyle(fontSize: 12),
+                             Text(
+                              '${responses?.data.length??'8'} Products',
+                              style: TextStyle(fontSize: 12),
                             ),
                           ],
                         ),
@@ -106,7 +290,7 @@ class _BrandProfileScreenState extends State<BrandProfileScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
-                widget.profile.groupName ?? 'Where fashion meets function for the modern, stylish woman.',
+                responsesGroup?.shortInfo ?? widget.profile.groupName ?? 'Where fashion meets function for the modern, stylish woman.',
                 style: const TextStyle(fontSize: 14, color: Colors.grey),
               ),
             ),
@@ -117,13 +301,13 @@ class _BrandProfileScreenState extends State<BrandProfileScreen> {
                 children: [
                   Chip(
                     avatar: const Icon(Icons.label, size: 16),
-                    label: Text( 'Women Wears (Brand)'),
+                    label: Text(responsesGroup?.categoryName ?? 'Women Wears (Brand)'),
                     backgroundColor: Colors.grey[200],
                   ),
                   const SizedBox(width: 8),
                   Chip(
                     avatar: const Icon(Icons.location_on, size: 16, color: Colors.blue),
-                    label: Text( 'Agartala (Tripura)'),
+                    label: Text(responsesGroup?.city ?? 'Agartala (Tripura)'),
                     backgroundColor: Colors.grey[200],
                   ),
                 ],
@@ -170,11 +354,11 @@ class _BrandProfileScreenState extends State<BrandProfileScreen> {
                 children: [
                   CircleAvatar(
                     radius: 20,
-                    backgroundImage: CachedNetworkImageProvider(widget.profile.groupLogo ?? ''),
+                    backgroundImage: CachedNetworkImageProvider(responsesGroup?.ownerDpUrl ?? widget.profile.groupLogo ?? ''),
                     onBackgroundImageError: (exception, stackTrace) => const Icon(Icons.error),
-                    child: widget.profile.groupLogo == null || widget.profile.groupLogo!.isEmpty
+                    child: (responsesGroup?.ownerDpUrl ?? widget.profile.groupLogo) == null || (responsesGroup?.ownerDpUrl ?? widget.profile.groupLogo)!.isEmpty
                         ? Text(
-                      widget.profile.groupLogo?.substring(0, 1) ?? 'S',
+                      responsesGroup?.ownerName?.substring(0, 1) ?? widget.profile.groupName?.substring(0, 1) ?? 'S',
                       style: const TextStyle(color: Colors.black),
                     )
                         : null,
@@ -182,7 +366,7 @@ class _BrandProfileScreenState extends State<BrandProfileScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      widget.profile.subTitle ?? 'Hi, this is ${widget.profile.subTitle ?? 'Sudip Das'} running ${widget.profile.groupName ?? 'SD Collection'} since 2020.',
+                      'Hi, this is ${responsesGroup?.ownerName ?? widget.profile.subTitle ?? 'Sudip Das'} running ${responsesGroup?.groupName ?? widget.profile.groupName ?? 'SD Collection'} since ${responsesGroup?.createdDate?.split(' ')[0] ?? '2020'}.',
                       style: const TextStyle(fontSize: 14),
                     ),
                   ),
@@ -204,7 +388,7 @@ class _BrandProfileScreenState extends State<BrandProfileScreen> {
                       const Icon(Icons.local_offer, color: Colors.green),
                       const SizedBox(width: 8),
                       Text(
-                        '₹50 coupon available from this brand.',
+                        '₹${responsesGroup?.offerJson?.isNotEmpty == true ? responsesGroup!.offerJson![0].couponAmount ?? 50 : 50} coupon available from this brand.',
                         style: const TextStyle(fontSize: 14, color: Colors.green),
                       ),
                       const Icon(Icons.chevron_right, color: Colors.green),
@@ -215,73 +399,112 @@ class _BrandProfileScreenState extends State<BrandProfileScreen> {
             ),
             const SizedBox(height: 16),
             // Product Grid
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(8.0),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.75,
-                crossAxisSpacing: 8.0,
-                mainAxisSpacing: 8.0,
-              ),
-              itemCount: 10,
-              itemBuilder: (context, index) {
-                // final product = widget.profile..catalog?.products[index];
-                return Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-                        child: CachedNetworkImage(
-                          imageUrl:  '',
-                          height: 120,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                          errorWidget: (context, url, error) => const Icon(Icons.error),
-                        ),
+            if (isLoading && responses == null)
+              const Center(child: CircularProgressIndicator(color: Colors.pink))
+            else if (errorMessage != null)
+              Center(
+                child: Column(
+                  children: [
+                    Text(errorMessage!, style: const TextStyle(color: Colors.red)),
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        fetchGroup(1, "token");
+                        fetchGroupData(1, "token");
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              )
+            else if (responses == null || responses!.data.isEmpty)
+                const Center(child: Text('No products available'))
+              else
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final crossAxisCount = constraints.maxWidth < 600 ? 2 : 4;
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(8.0),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        childAspectRatio: 16 / 12,
+                        crossAxisSpacing: 8.0,
+                        mainAxisSpacing: 8.0,
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                               'Unknown Product',
-                              style: const TextStyle(fontSize: 14),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
+                      itemCount: responses!.data.length,
+                      itemBuilder: (context, index) {
+                        final catalog = responses!.data[index];
+                        return InkWell(
+                          onTap: () {
+                            navigateToCatalog(context, catalog.catalogId);
+                          },
+                          child: Card(
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  '₹${100}',
-                                  style: const TextStyle(fontSize: 14, color: Colors.blue),
+                                ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                                  child: AspectRatio(
+                                    aspectRatio: 19 / 9,
+                                    child: CachedNetworkImage(
+                                      imageUrl: catalog.products.isNotEmpty ? catalog.products.first.imageUrl : '',
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                                      errorWidget: (context, url, error) => const Icon(Icons.error),
+                                    ),
+                                  ),
                                 ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '₹${100}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                    decoration: TextDecoration.lineThrough,
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        catalog.catalogTitle,
+                                        style: const TextStyle(fontSize: 14),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            '₹${catalog.startingPrice}',
+                                            style: const TextStyle(fontSize: 14, color: Colors.blue),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          if (catalog.maxMrp != catalog.startingPrice)
+                                            Text(
+                                              '₹${catalog.maxMrp}',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey,
+                                                decoration: TextDecoration.lineThrough,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+            if (isLoadingMore)
+              const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Center(child: CircularProgressIndicator(color: Colors.pink)),
+              ),
           ],
         ),
       ),

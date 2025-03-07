@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import 'package:universal_html/html.dart' as html;
 
 class VideoContent extends StatefulWidget {
   final String videoUrl;
 
-  const VideoContent({required this.videoUrl, Key? key}) : super(key: key);
+  const VideoContent({required this.videoUrl, super.key});
 
   @override
   _VideoContentState createState() => _VideoContentState();
@@ -13,6 +14,7 @@ class VideoContent extends StatefulWidget {
 class _VideoContentState extends State<VideoContent> {
   bool _isLoading = true;
   String? _errorMessage;
+  VideoPlayerController? _videoPlayerController;
   html.VideoElement? _videoElement;
   html.DivElement? _videoContainer;
   double _top = 50.0; // Initial top position
@@ -20,38 +22,41 @@ class _VideoContentState extends State<VideoContent> {
   double _width = 300.0; // Initial width for PiP
   double _height = 200.0; // Initial height for PiP
   bool _isDragging = false;
+  bool _useHtmlVideo = false;
 
   @override
   void initState() {
     super.initState();
-    print('Initializing HTML video with URL: ${widget.videoUrl}'); // Debug log
-    _checkVideoUrl().then((success) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = success ? null : 'Failed to load video URL';
-          if (success) {
-            _createVideoElement();
-          }
-        });
-      }
-    }).catchError((error) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Error loading video: $error';
-        });
-      }
-    });
+    _initializeVideoPlayer();
   }
 
-  Future<bool> _checkVideoUrl() async {
+  void _initializeVideoPlayer() async {
     try {
-      final request = await html.HttpRequest.request(widget.videoUrl, method: 'HEAD');
-      return request.status == 200;
+      _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
+        ..addListener(() {
+          if (_videoPlayerController!.value.hasError) {
+            _fallbackToHtmlVideo();
+          }
+        })
+        ..initialize().then((_) {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
+        });
     } catch (e) {
-      print('Video URL check error: $e');
-      return false;
+      _fallbackToHtmlVideo();
+    }
+  }
+
+  void _fallbackToHtmlVideo() {
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        _useHtmlVideo = true;
+      });
+      _createVideoElement();
     }
   }
 
@@ -85,6 +90,7 @@ class _VideoContentState extends State<VideoContent> {
 
   @override
   void dispose() {
+    _videoPlayerController?.dispose();
     if (_videoContainer != null) {
       _videoContainer!.remove();
       _videoContainer = null;
@@ -128,7 +134,8 @@ class _VideoContentState extends State<VideoContent> {
         textAlign: TextAlign.center,
       ),
     )
-        : GestureDetector(
+        : _useHtmlVideo
+        ? GestureDetector(
       onPanUpdate: _handleDragUpdate,
       onPanStart: _handleDragStart,
       onPanEnd: _handleDragEnd,
@@ -162,6 +169,10 @@ class _VideoContentState extends State<VideoContent> {
           ),
         ],
       ),
+    )
+        : AspectRatio(
+      aspectRatio: _videoPlayerController!.value.aspectRatio,
+      child: VideoPlayer(_videoPlayerController!),
     );
   }
 }
